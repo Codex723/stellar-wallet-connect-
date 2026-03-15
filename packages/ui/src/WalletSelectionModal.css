@@ -1,0 +1,141 @@
+/* Wallet Selection Modal Styles */
+.wallet-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.wallet-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  margin: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.wallet-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.wallet-modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.wallet-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.wallet-modal-close:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.wallet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wallet-option {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  width: 100%;
+}
+
+.wallet-option:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.wallet-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wallet-option-icon {
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+  border-radius: 6px;
+}
+
+.wallet-option-info {
+  flex: 1;
+  text-align: left;
+}
+
+.wallet-option-name {
+  font-weight: 500;
+  margin: 0 0 2px 0;
+  font-size: 14px;
+}
+
+.wallet-option-status {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.wallet-option-action {
+  color: #3b82f6;
+  font-size: 12px;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.wallet-option-action:hover {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .wallet-modal {
+    margin: 8px;
+    padding: 16px;
+  }
+  
+  .wallet-option {
+    padding: 12px;
+  }
+  
+  .wallet-option-icon {
+    width: 28px;
+    height: 28px;
+  }
+}

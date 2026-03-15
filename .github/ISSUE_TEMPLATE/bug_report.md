@@ -1,0 +1,46 @@
+---
+name: Bug Report
+about: Create a report to help us improve
+title: ''
+labels: bug
+assignees: ''
+---
+
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+**Actual behavior**
+A clear and concise description of what actually happened.
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
+
+**Environment:**
+ - OS: [e.g. Windows 10, macOS 13.0, Ubuntu 22.04]
+ - Browser: [e.g. Chrome, Firefox, Safari]
+ - Node.js version: [e.g. 18.0.0, 20.0.0]
+ - Library version: [e.g. 1.0.0]
+
+**Wallet Information:**
+ - Which wallet(s) are you using? [e.g. Freighter, xBull, Lobstr, Albedo, Rabet]
+ - Wallet version(s): [e.g. Freighter v10.0.0]
+
+**Additional context**
+Add any other context about the problem here.
+
+**Code Sample**
+If applicable, add a minimal code sample that reproduces the issue:
+
+```tsx
+// Your code here
+```

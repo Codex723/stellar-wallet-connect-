@@ -1,0 +1,28 @@
+{
+  "name": "@stellar-wallet-connect/core",
+  "version": "1.0.0",
+  "description": "Core SDK for Stellar wallet connectivity",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@stellar/freighter-api": "^1.3.0",
+    "@stellar/stellar-sdk": "^12.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vite-plugin-dts": "^3.7.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
