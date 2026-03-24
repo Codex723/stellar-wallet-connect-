@@ -1,14 +1,13 @@
-import React, {
+import {
     createContext,
     useReducer,
     useEffect,
     useCallback,
     useRef,
     useMemo,
-    ReactNode,
+    type ReactNode,
 } from 'react';
 
-// Types
 export type WalletType = 'freighter' | 'xbull' | 'lobstr' | 'albedo' | 'rabet';
 export type Network = 'public' | 'testnet';
 export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error' | 'disconnecting';
@@ -32,8 +31,8 @@ export interface WalletAdapter {
     getPublicKey(): Promise<string>;
     getNetwork(): Promise<Network>;
     signTransaction(xdr: string, network?: Network): Promise<string>;
-    onAccountChange?: (cb: (publicKey: string | null) => void) => () => void;
-    onNetworkChange?: (cb: (network: Network) => void) => () => void;
+    onAccountChanged?: (callback: (account: WalletAccount | null) => void) => () => void;
+    onNetworkChanged?: (callback: (network: Network) => void) => () => void;
 }
 
 export interface WalletContextValue {
@@ -42,10 +41,17 @@ export interface WalletContextValue {
     disconnect: () => Promise<void>;
     signTransaction: (xdr: string) => Promise<string>;
     resetError: () => void;
+    isConnected: boolean;
 }
 
 const LS_KEY = 'stellar-wallet-connect';
 const DEBOUNCE_MS = 300;
+
+export interface WalletProviderProps {
+    children: ReactNode;
+    adapters: Partial<Record<WalletType, WalletAdapter>>;
+    autoReconnect?: boolean;
+}
 
 export const WalletContext = createContext<WalletContextValue | null>(null);
 
@@ -89,7 +95,7 @@ function reducer(state: WalletState, action: Action): WalletState {
     }
 }
 
-export function WalletProvider({ children, adapters, autoReconnect = true }: { children: ReactNode, adapters: Record<WalletType, WalletAdapter>, autoReconnect?: boolean }) {
+export function WalletProvider({ children, adapters, autoReconnect = true }: WalletProviderProps) {
     const [state, dispatch] = useReducer(reducer, initialState);
     const adapterRef = useRef<WalletAdapter | null>(null);
     const unsubs = useRef<(() => void)[]>([]);
@@ -102,24 +108,28 @@ export function WalletProvider({ children, adapters, autoReconnect = true }: { c
         if (timers.current.net) clearTimeout(timers.current.net);
     }, []);
 
-    const attach = useCallback((adapter: WalletAdapter) => {
+    const attach = useCallback((adapter: WalletAdapter, handleDisconnect: () => void) => {
         detach();
-        if (adapter.onAccountChange) {
-            unsubs.current.push(adapter.onAccountChange((pk) => {
-                clearTimeout(timers.current.acc);
-                timers.current.acc = setTimeout(() => {
-                    if (pk) dispatch({ type: 'ACCOUNT_CHANGED', publicKey: pk });
-                    else disconnect();
-                }, DEBOUNCE_MS);
-            }));
+        if (adapter.onAccountChanged) {
+            unsubs.current.push(
+                adapter.onAccountChanged((account) => {
+                    clearTimeout(timers.current.acc);
+                    timers.current.acc = setTimeout(() => {
+                        if (account?.publicKey) dispatch({ type: 'ACCOUNT_CHANGED', publicKey: account.publicKey });
+                        else void handleDisconnect();
+                    }, DEBOUNCE_MS);
+                })
+            );
         }
-        if (adapter.onNetworkChange) {
-            unsubs.current.push(adapter.onNetworkChange((net) => {
-                clearTimeout(timers.current.net);
-                timers.current.net = setTimeout(() => dispatch({ type: 'NETWORK_CHANGED', network: net }), DEBOUNCE_MS);
-            }));
+        if (adapter.onNetworkChanged) {
+            unsubs.current.push(
+                adapter.onNetworkChanged((net) => {
+                    clearTimeout(timers.current.net);
+                    timers.current.net = setTimeout(() => dispatch({ type: 'NETWORK_CHANGED', network: net }), DEBOUNCE_MS);
+                })
+            );
         }
-    }, []);
+    }, [detach]);
 
     const connect = useCallback(async (id: WalletType) => {
         dispatch({ type: 'CONNECT_START', walletId: id });
@@ -131,11 +141,13 @@ export function WalletProvider({ children, adapters, autoReconnect = true }: { c
         try {
             const acc = await adp.connect();
             adapterRef.current = adp;
-            attach(adp);
-            localStorage.setItem(LS_KEY, id);
+            attach(adp, () => {
+                void disconnect();
+            });
+            localStorage.setItem(LS_KEY, JSON.stringify({ walletId: id }));
             dispatch({ type: 'CONNECT_SUCCESS', walletId: id, account: acc });
-        } catch (e: any) {
-            dispatch({ type: 'CONNECT_FAILURE', error: e.message });
+        } catch (e: unknown) {
+            dispatch({ type: 'CONNECT_FAILURE', error: e instanceof Error ? e.message : 'Failed to connect wallet' });
         }
     }, [adapters, attach]);
 
@@ -150,9 +162,23 @@ export function WalletProvider({ children, adapters, autoReconnect = true }: { c
 
     useEffect(() => {
         if (!autoReconnect) return;
-        const saved = localStorage.getItem(LS_KEY) as WalletType;
-        if (saved && adapters[saved]) connect(saved);
-    }, []);
+
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return;
+
+        try {
+            const parsed = JSON.parse(raw) as { walletId?: WalletType };
+            if (parsed.walletId && adapters[parsed.walletId]) {
+                void connect(parsed.walletId);
+            }
+        } catch {
+            localStorage.removeItem(LS_KEY);
+        }
+    }, [adapters, autoReconnect, connect]);
+
+    useEffect(() => () => {
+        detach();
+    }, [detach]);
 
     const value = useMemo(() => ({
         state,
@@ -162,7 +188,8 @@ export function WalletProvider({ children, adapters, autoReconnect = true }: { c
         signTransaction: async (xdr: string) => {
             if (!adapterRef.current) throw new Error('No wallet connected');
             return adapterRef.current.signTransaction(xdr, state.account?.network);
-        }
+        },
+        isConnected: state.status === 'connected',
     }), [state, connect, disconnect]);
 
     return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
